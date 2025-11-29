@@ -976,7 +976,7 @@ const styles = {
   
   // Panneau de contrôle
   controlPanel: {
-    padding: '8px 5px 15px 5px',
+    padding: '2px 5px 15px 5px',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
