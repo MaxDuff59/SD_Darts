@@ -922,6 +922,7 @@ const styles = {
     gap: '6px',
     padding: '5px 0',
     justifyContent: 'center',
+    marginBottom: '2px',
     flexShrink: 0,
   },
   scoreCard: {
@@ -961,7 +962,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '0',
+    padding: '2px 0',
     flex: 1,
   },
   dartBoardContainer: {
