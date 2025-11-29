@@ -345,10 +345,32 @@ function ZoneGameScreen({ players, onEndGame }) {
     players.reduce((acc, player) => ({ ...acc, [player.id]: 1 }), {})
   );
   const [gameOver, setGameOver] = useState(false);
+  const [history, setHistory] = useState([]);
 
   const currentPlayer = players[currentPlayerIndex];
 
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    
+    const lastState = history[history.length - 1];
+    setZones(lastState.zones);
+    setScores(lastState.scores);
+    setCurrentPlayerIndex(lastState.currentPlayerIndex);
+    setThrowsLeft(lastState.throwsLeft);
+    setPlayerRounds(lastState.playerRounds);
+    setHistory(history.slice(0, -1));
+  };
+
   const handleZoneClick = useCallback((number, zoneType) => {
+    // Sauvegarder l'état actuel dans l'historique
+    setHistory(prev => [...prev, {
+      zones: { ...zones },
+      scores: { ...scores },
+      currentPlayerIndex,
+      throwsLeft,
+      playerRounds: { ...playerRounds },
+    }]);
+
     const zoneKey = number === 'bull' 
       ? (zoneType === ZONE_TYPES.BULL_INNER ? 'bull-inner' : 'bull-outer')
       : `${number}-${zoneType}`;
@@ -518,6 +540,19 @@ function ZoneGameScreen({ players, onEndGame }) {
           />
         </div>
       </div>
+
+      {/* Bouton Annuler */}
+      <button 
+        onClick={handleUndo} 
+        style={{
+          ...styles.undoButton,
+          opacity: history.length > 0 ? 1 : 0.3,
+          cursor: history.length > 0 ? 'pointer' : 'not-allowed',
+        }}
+        disabled={history.length === 0}
+      >
+        ↩ Annuler
+      </button>
     </div>
   );
 }
@@ -795,7 +830,7 @@ const styles = {
   scoresPanel: {
     display: 'flex',
     gap: '8px',
-    padding: '10px 0',
+    padding: '5px 0 0 0',
     justifyContent: 'center',
     flexShrink: 0,
   },
@@ -835,10 +870,10 @@ const styles = {
   mainArea: {
     flex: 1,
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     minHeight: 0,
-    padding: '5px',
+    padding: '0 5px',
   },
   dartBoardContainer: {
     width: '100%',
@@ -849,6 +884,20 @@ const styles = {
   dartBoard: {
     width: '100%',
     height: '100%',
+  },
+  
+  // Bouton Annuler
+  undoButton: {
+    background: 'rgba(255,255,255,0.1)',
+    border: 'none',
+    color: '#fff',
+    fontSize: '14px',
+    padding: '12px 20px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    margin: '5px auto 10px auto',
+    display: 'block',
+    transition: 'all 0.3s ease',
   },
 
   // Game Over Screen
