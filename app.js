@@ -6,10 +6,7 @@ const AVAILABLE_COLORS = [
   { color: '#FFE66D', shadowColor: 'rgba(255, 230, 109, 0.6)' },
   { color: '#AA96DA', shadowColor: 'rgba(170, 150, 218, 0.6)' },
   { color: '#FCBAD3', shadowColor: 'rgba(252, 186, 211, 0.6)' },
-  { color: '#95E1D3', shadowColor: 'rgba(149, 225, 211, 0.6)' },
-  { color: '#FFB6B9', shadowColor: 'rgba(255, 182, 185, 0.6)' },
-  { color: '#8EC5FC', shadowColor: 'rgba(142, 197, 252, 0.6)' },
-  { color: '#FEC8D8', shadowColor: 'rgba(254, 200, 216, 0.6)' },
+  { color: '#0414f4ff', shadowColor: 'rgba(149, 225, 211, 0.6)' },
 ];
 
 // Liste des joueurs prédéfinies (sans couleur)
