@@ -68,7 +68,7 @@ function HomeScreen({ onSelectGame }) {
       <div style={styles.logoContainer}>
         <div style={styles.logoIcon}>🎯</div>
         <h1 style={styles.mainTitle}>DARTS</h1>
-        <p style={styles.subtitle}>COMPANION</p>
+        <p style={styles.subtitle}>Sports Dynamics</p>
       </div>
       
       <div style={styles.gamesGrid}>
@@ -684,7 +684,7 @@ function DartsApp() {
 const styles = {
   app: {
     height: '90vh',
-    background: 'linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f1f 100%)',
+    background: 'linear-gradient(135deg, #0B3D91 0%, #1a5490 50%, #0a2d6b 100%)',
     fontFamily: "'Segoe UI', system-ui, sans-serif",
     color: '#fff',
     overflow: 'hidden',
@@ -714,14 +714,14 @@ const styles = {
     fontWeight: '900',
     letterSpacing: '8px',
     margin: '0',
-    background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
+    background: 'linear-gradient(135deg, #FF8C00, #0B3D91)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
   },
   subtitle: {
     fontSize: '14px',
     letterSpacing: '6px',
-    color: '#888',
+    color: '#FF8C00',
     margin: '5px 0 0 0',
   },
   gamesGrid: {
@@ -731,8 +731,8 @@ const styles = {
     justifyContent: 'center',
   },
   gameCard: {
-    background: 'rgba(255,255,255,0.05)',
-    border: '2px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255, 140, 0, 0.1)',
+    border: '2px solid rgba(255, 140, 0, 0.3)',
     borderRadius: '15px',
     padding: '20px',
     width: '130px',
@@ -760,7 +760,8 @@ const styles = {
     top: '8px',
     right: '8px',
     fontSize: '9px',
-    background: '#333',
+    background: '#FF8C00',
+    color: '#fff',
     padding: '2px 6px',
     borderRadius: '8px',
   },
@@ -778,7 +779,7 @@ const styles = {
     alignSelf: 'flex-start',
     background: 'none',
     border: 'none',
-    color: '#888',
+    color: '#FF8C00',
     fontSize: '14px',
     cursor: 'pointer',
     padding: '8px',
@@ -789,7 +790,7 @@ const styles = {
     margin: '0',
   },
   selectSubtitle: {
-    color: '#888',
+    color: '#FF8C00',
     margin: '8px 0 20px 0',
     fontSize: '12px',
   },
@@ -801,8 +802,8 @@ const styles = {
     maxWidth: '360px',
   },
   playerCard: {
-    background: 'rgba(255,255,255,0.05)',
-    border: '2px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255, 140, 0, 0.1)',
+    border: '2px solid rgba(255, 140, 0, 0.2)',
     borderRadius: '12px',
     padding: '15px 10px',
     display: 'flex',
@@ -847,7 +848,7 @@ const styles = {
     padding: '14px 30px',
     fontSize: '16px',
     fontWeight: 'bold',
-    background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
+    background: 'linear-gradient(135deg, #FF8C00, #0B3D91)',
     border: 'none',
     borderRadius: '25px',
     color: '#fff',
@@ -871,9 +872,9 @@ const styles = {
     flexShrink: 0,
   },
   endGameButton: {
-    background: 'rgba(255,255,255,0.1)',
+    background: 'rgba(255, 140, 0, 0.2)',
     border: 'none',
-    color: '#888',
+    color: '#FF8C00',
     fontSize: '14px',
     padding: '8px 12px',
     borderRadius: '8px',
@@ -901,7 +902,7 @@ const styles = {
   },
   roundIndicator: {
     fontSize: '14px',
-    color: '#888',
+    color: '#FF8C00',
     fontWeight: 'bold',
   },
   
@@ -914,7 +915,7 @@ const styles = {
     flexShrink: 0,
   },
   scoreCard: {
-    background: 'rgba(255,255,255,0.05)',
+    background: 'rgba(255, 140, 0, 0.1)',
     borderRadius: '8px',
     padding: '6px 10px',
     display: 'flex',
@@ -997,7 +998,7 @@ const styles = {
     height: '46px',
     border: 'none',
     borderRadius: '8px',
-    background: 'rgba(255,255,255,0.15)',
+    background: 'rgba(255, 140, 0, 0.2)',
     color: '#fff',
     fontSize: '16px',
     fontWeight: 'bold',
@@ -1005,14 +1006,14 @@ const styles = {
     transition: 'all 0.2s ease',
   },
   bullButton: {
-    background: '#E74C3C',
+    background: '#FF8C00',
   },
   
   // Bouton Annuler
   undoButton: {
-    background: 'rgba(255,255,255,0.1)',
+    background: 'rgba(255, 140, 0, 0.2)',
     border: 'none',
-    color: '#fff',
+    color: '#FF8C00',
     fontSize: '14px',
     padding: '12px 25px',
     borderRadius: '10px',
@@ -1043,7 +1044,7 @@ const styles = {
     color: '#fff',
   },
   winnerCard: {
-    background: 'rgba(255,255,255,0.05)',
+    background: 'rgba(255, 140, 0, 0.1)',
     borderRadius: '16px',
     padding: '20px',
     border: '3px solid',
@@ -1072,7 +1073,7 @@ const styles = {
     color: '#888',
   },
   finalRankings: {
-    background: 'rgba(255,255,255,0.03)',
+    background: 'rgba(255, 140, 0, 0.05)',
     borderRadius: '10px',
     padding: '12px',
     marginBottom: '20px',
@@ -1082,7 +1083,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 5px',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    borderBottom: '1px solid rgba(255, 140, 0, 0.1)',
   },
   finalRankPosition: {
     width: '25px',
@@ -1096,7 +1097,7 @@ const styles = {
     padding: '14px 40px',
     fontSize: '16px',
     fontWeight: 'bold',
-    background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
+    background: 'linear-gradient(135deg, #FF8C00, #0B3D91)',
     border: 'none',
     borderRadius: '25px',
     color: '#fff',
