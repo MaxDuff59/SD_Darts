@@ -22,12 +22,6 @@ const PREDEFINED_PLAYERS = [
   { id: 4, name: 'Louis' },
   { id: 5, name: 'Flavio' },
   { id: 6, name: 'Florian' },
-  // { id: 7, name: 'Nathanaël' },
-  // { id: 8, name: 'Ben' },
-  // { id: 9, name: 'Bénédicte' },
-  // { id: 10, name: 'Romain' },
-  // { id: 11, name: 'Xavier' },
-  // { id: 12, name: 'Paul' },
 ];
 
 // Fonction pour assigner des couleurs aléatoires
@@ -129,7 +123,6 @@ function PlayerSelectScreen({ onStartGame, onBack }) {
           const isSelected = selectedPlayers.find(p => p.id === player.id);
           const selectionIndex = selectedPlayers.findIndex(p => p.id === player.id);
           
-          // Assigner une couleur temporaire pour l'affichage
           const tempColor = AVAILABLE_COLORS[player.id % AVAILABLE_COLORS.length];
           
           return (
@@ -181,7 +174,6 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
   const centerX = 200;
   const centerY = 200;
   
-  // Rayons des différentes zones
   const radii = {
     bullInner: 12,
     bullOuter: 30,
@@ -192,7 +184,6 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
     outer: 170,
   };
 
-  // Créer un segment de la cible
   const createSegment = (index, innerRadius, outerRadius, zoneType) => {
     const segmentAngle = 360 / 20;
     const startAngle = (index * segmentAngle - 99) * (Math.PI / 180);
@@ -221,7 +212,6 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
     return d;
   };
 
-  // Couleur de base selon la position
   const getBaseColor = (index, zoneType) => {
     const isEven = index % 2 === 0;
     if (zoneType === ZONE_TYPES.DOUBLE || zoneType === ZONE_TYPES.TRIPLE) {
@@ -230,7 +220,6 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
     return isEven ? '#1a1a2e' : '#F5DEB3';
   };
 
-  // Obtenir la couleur finale (avec possession)
   const getZoneColor = (number, zoneType) => {
     const zoneKey = `${number}-${zoneType}`;
     const zone = zones[zoneKey];
@@ -241,7 +230,6 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
     return getBaseColor(index, zoneType);
   };
 
-  // Rendre un segment cliquable
   const renderSegment = (index, innerRadius, outerRadius, zoneType) => {
     const number = DART_NUMBERS[index];
     const zoneKey = `${number}-${zoneType}`;
@@ -261,17 +249,10 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
           filter: isOwned ? `drop-shadow(0 0 8px ${zone.owner.color})` : 'none',
         }}
         onClick={() => onZoneClick(number, zoneType)}
-        onMouseEnter={(e) => {
-          e.target.style.filter = `brightness(1.3) drop-shadow(0 0 10px ${currentPlayer.color})`;
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.filter = isOwned ? `drop-shadow(0 0 8px ${zone.owner.color})` : 'none';
-        }}
       />
     );
   };
 
-  // Numéros autour de la cible
   const renderNumbers = () => {
     return DART_NUMBERS.map((num, index) => {
       const segmentAngle = 360 / 20;
@@ -300,31 +281,24 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
 
   return (
     <svg viewBox="0 0 400 400" style={styles.dartBoard}>
-      {/* Cercle extérieur décoratif */}
       <circle cx={centerX} cy={centerY} r={195} fill="#0a0a15" stroke="#333" strokeWidth="2" />
       
-      {/* Segments - du plus extérieur au plus intérieur */}
-      {/* Singles externes (entre double et triple) */}
       {DART_NUMBERS.map((_, index) => 
         renderSegment(index, radii.tripleOuter, radii.doubleInner, ZONE_TYPES.SINGLE_OUTER)
       )}
       
-      {/* Doubles (anneau extérieur) */}
       {DART_NUMBERS.map((_, index) => 
         renderSegment(index, radii.doubleInner, radii.doubleOuter, ZONE_TYPES.DOUBLE)
       )}
       
-      {/* Triples */}
       {DART_NUMBERS.map((_, index) => 
         renderSegment(index, radii.tripleInner, radii.tripleOuter, ZONE_TYPES.TRIPLE)
       )}
       
-      {/* Singles internes (entre bull et triple) */}
       {DART_NUMBERS.map((_, index) => 
         renderSegment(index, radii.bullOuter, radii.tripleInner, ZONE_TYPES.SINGLE_INNER)
       )}
       
-      {/* Bull externe */}
       <circle
         cx={centerX}
         cy={centerY}
@@ -337,15 +311,8 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
           filter: zones['bull-outer']?.owner ? `drop-shadow(0 0 8px ${zones['bull-outer'].owner.color})` : 'none',
         }}
         onClick={() => onZoneClick('bull', ZONE_TYPES.BULL_OUTER)}
-        onMouseEnter={(e) => {
-          e.target.style.filter = `brightness(1.3) drop-shadow(0 0 10px ${currentPlayer.color})`;
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.filter = zones['bull-outer']?.owner ? `drop-shadow(0 0 8px ${zones['bull-outer'].owner.color})` : 'none';
-        }}
       />
       
-      {/* Bull interne (bullseye) */}
       <circle
         cx={centerX}
         cy={centerY}
@@ -358,15 +325,8 @@ function DartBoard({ zones, currentPlayer, onZoneClick }) {
           filter: zones['bull-inner']?.owner ? `drop-shadow(0 0 8px ${zones['bull-inner'].owner.color})` : 'none',
         }}
         onClick={() => onZoneClick('bull', ZONE_TYPES.BULL_INNER)}
-        onMouseEnter={(e) => {
-          e.target.style.filter = `brightness(1.3) drop-shadow(0 0 10px ${currentPlayer.color})`;
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.filter = zones['bull-inner']?.owner ? `drop-shadow(0 0 8px ${zones['bull-inner'].owner.color})` : 'none';
-        }}
       />
       
-      {/* Numéros */}
       {renderNumbers()}
     </svg>
   );
@@ -381,7 +341,6 @@ function ZoneGameScreen({ players, onEndGame }) {
   );
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [throwsLeft, setThrowsLeft] = useState(3);
-  const [currentRound, setCurrentRound] = useState(1);
   const [playerRounds, setPlayerRounds] = useState(
     players.reduce((acc, player) => ({ ...acc, [player.id]: 1 }), {})
   );
@@ -398,7 +357,6 @@ function ZoneGameScreen({ players, onEndGame }) {
     let newZones = { ...zones };
     let newScores = { ...scores };
 
-    // Calculer les points
     let points = 0;
     if (number === 'bull') {
       points = ZONE_MULTIPLIERS[zoneType];
@@ -409,13 +367,11 @@ function ZoneGameScreen({ players, onEndGame }) {
     }
 
     if (!zone || !zone.owner) {
-      // Zone neutre - le joueur la capture
       newZones[zoneKey] = { owner: currentPlayer };
       newScores[currentPlayer.id] += points;
     } else if (zone.owner.id === currentPlayer.id) {
       // Zone déjà possédée - rien ne change
     } else {
-      // Zone adverse - devient neutre et l'adversaire perd ses points
       newScores[zone.owner.id] -= points;
       newZones[zoneKey] = { owner: null };
     }
@@ -423,14 +379,11 @@ function ZoneGameScreen({ players, onEndGame }) {
     setZones(newZones);
     setScores(newScores);
 
-    // Gestion des lancers
     const newThrowsLeft = throwsLeft - 1;
     if (newThrowsLeft === 0) {
-      // Fin du tour pour ce joueur
-      const newPlayerRounds =
+      const newPlayerRounds = { ...playerRounds };
       newPlayerRounds[currentPlayer.id] = playerRounds[currentPlayer.id] + 1;
       
-      // Trouver le prochain joueur qui n'a pas fini
       let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
       let checkedPlayers = 0;
       
@@ -439,14 +392,12 @@ function ZoneGameScreen({ players, onEndGame }) {
         checkedPlayers++;
       }
       
-      // Vérifier si tous les joueurs ont fini
       const allPlayersFinished = players.every(p => newPlayerRounds[p.id] > MAX_ROUNDS);
       
       if (allPlayersFinished) {
         setGameOver(true);
       } else {
         setCurrentPlayerIndex(nextPlayerIndex);
-        setCurrentRound(newPlayerRounds[players[nextPlayerIndex].id]);
         setThrowsLeft(3);
       }
       
@@ -454,12 +405,10 @@ function ZoneGameScreen({ players, onEndGame }) {
     } else {
       setThrowsLeft(newThrowsLeft);
     }
-  }, [zones, scores, currentPlayer, currentPlayerIndex, players, throwsLeft]);
+  }, [zones, scores, currentPlayer, currentPlayerIndex, players, throwsLeft, playerRounds]);
 
-  // Trier les joueurs par score pour le classement
   const rankedPlayers = [...players].sort((a, b) => scores[b.id] - scores[a.id]);
 
-  // Écran de fin de partie
   if (gameOver) {
     const winner = rankedPlayers[0];
     return (
@@ -504,17 +453,13 @@ function ZoneGameScreen({ players, onEndGame }) {
 
   return (
     <div style={styles.gameContainer}>
-      {/* Header avec joueur actuel */}
+      {/* Header compact avec bouton quitter et tour */}
       <div style={styles.gameHeader}>
-        <button onClick={onEndGame} style={styles.endGameButton}>
-          ✕ Quitter
-        </button>
+        <button onClick={onEndGame} style={styles.endGameButton}>✕</button>
         <div style={styles.currentPlayerDisplay}>
-          <span style={styles.currentPlayerLabel}>Tour de</span>
           <span style={{
             ...styles.currentPlayerName,
             color: currentPlayer.color,
-            textShadow: `0 0 20px ${currentPlayer.shadowColor}`,
           }}>
             {currentPlayer.name}
           </span>
@@ -525,27 +470,15 @@ function ZoneGameScreen({ players, onEndGame }) {
                 style={{
                   ...styles.throwDot,
                   backgroundColor: i <= throwsLeft ? currentPlayer.color : '#333',
-                  boxShadow: i <= throwsLeft ? `0 0 10px ${currentPlayer.color}` : 'none',
                 }}
               />
             ))}
           </div>
-          <span style={styles.roundIndicator}>Tour {playerRounds[currentPlayer.id]}/{MAX_ROUNDS}</span>
         </div>
+        <span style={styles.roundIndicator}>{playerRounds[currentPlayer.id]}/{MAX_ROUNDS}</span>
       </div>
 
-      {/* Zone principale avec cible */}
-      <div style={styles.mainArea}>
-        <div style={styles.dartBoardContainer}>
-          <DartBoard
-            zones={zones}
-            currentPlayer={currentPlayer}
-            onZoneClick={handleZoneClick}
-          />
-        </div>
-      </div>
-
-      {/* Scores - dans l'ordre de jeu */}
+      {/* Scores au-dessus de la cible */}
       <div style={styles.scoresPanel}>
         {players.map((player) => (
           <div
@@ -553,7 +486,7 @@ function ZoneGameScreen({ players, onEndGame }) {
             style={{
               ...styles.scoreCard,
               borderColor: player.id === currentPlayer.id ? player.color : 'transparent',
-              boxShadow: player.id === currentPlayer.id ? `0 0 15px ${player.shadowColor}` : 'none',
+              boxShadow: player.id === currentPlayer.id ? `0 0 10px ${player.shadowColor}` : 'none',
             }}
           >
             <div
@@ -571,11 +504,19 @@ function ZoneGameScreen({ players, onEndGame }) {
             }}>
               {scores[player.id]}
             </span>
-            <span style={styles.playerRoundInfo}>
-              {playerRounds[player.id] > MAX_ROUNDS ? '✓' : `${playerRounds[player.id]}/${MAX_ROUNDS}`}
-            </span>
           </div>
         ))}
+      </div>
+
+      {/* Cible */}
+      <div style={styles.mainArea}>
+        <div style={styles.dartBoardContainer}>
+          <DartBoard
+            zones={zones}
+            currentPlayer={currentPlayer}
+            onZoneClick={handleZoneClick}
+          />
+        </div>
       </div>
     </div>
   );
@@ -593,9 +534,7 @@ function DartsApp() {
   };
 
   const handleStartGame = (selectedPlayers) => {
-    // Assigner des couleurs aléatoires aux joueurs sélectionnés
     const playersWithColors = assignRandomColors(selectedPlayers);
-    // Mélanger l'ordre des joueurs aléatoirement
     const shuffledPlayers = [...playersWithColors].sort(() => Math.random() - 0.5);
     setPlayers(shuffledPlayers);
     setScreen('game');
@@ -631,16 +570,18 @@ function DartsApp() {
 // Styles
 const styles = {
   app: {
-    minHeight: '100vh',
+    height: '100vh',
     background: 'linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f1f 100%)',
     fontFamily: "'Segoe UI', system-ui, sans-serif",
     color: '#fff',
-    overflow: 'auto',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
   
   // Home Screen
   homeContainer: {
-    minHeight: '100vh',
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -654,7 +595,6 @@ const styles = {
   logoIcon: {
     fontSize: '60px',
     marginBottom: '8px',
-    animation: 'pulse 2s infinite',
   },
   mainTitle: {
     fontSize: '36px',
@@ -664,7 +604,6 @@ const styles = {
     background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    textShadow: 'none',
   },
   subtitle: {
     fontSize: '14px',
@@ -677,7 +616,6 @@ const styles = {
     gap: '15px',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    maxWidth: '100%',
   },
   gameCard: {
     background: 'rgba(255,255,255,0.05)',
@@ -716,11 +654,12 @@ const styles = {
 
   // Player Select Screen
   selectContainer: {
-    minHeight: '100vh',
+    flex: 1,
     padding: '15px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    overflow: 'auto',
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -743,17 +682,16 @@ const styles = {
   },
   playersGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+    gridTemplateColumns: 'repeat(3, 1fr)',
     gap: '12px',
-    maxWidth: '100%',
     width: '100%',
-    padding: '0 10px',
+    maxWidth: '360px',
   },
   playerCard: {
     background: 'rgba(255,255,255,0.05)',
     border: '2px solid rgba(255,255,255,0.1)',
     borderRadius: '12px',
-    padding: '15px',
+    padding: '15px 10px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -774,7 +712,7 @@ const styles = {
     color: '#000',
   },
   playerName: {
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '500',
   },
   playerOrder: {
@@ -805,101 +743,82 @@ const styles = {
 
   // Game Screen
   gameContainer: {
-    minHeight: '100vh',
+    height: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    padding: '5px',
-    gap: '5px',
+    padding: '10px',
+    boxSizing: 'border-box',
   },
   gameHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '6px 5px',
-    gap: '8px',
+    padding: '5px 0',
     flexShrink: 0,
   },
   endGameButton: {
     background: 'rgba(255,255,255,0.1)',
     border: 'none',
     color: '#888',
-    fontSize: '12px',
-    padding: '6px 10px',
+    fontSize: '14px',
+    padding: '8px 12px',
     borderRadius: '8px',
     cursor: 'pointer',
-    flexShrink: 0,
   },
   currentPlayerDisplay: {
     textAlign: 'center',
     flex: 1,
-    minWidth: 0,
-  },
-  currentPlayerLabel: {
-    fontSize: '9px',
-    color: '#888',
-    display: 'block',
   },
   currentPlayerName: {
-    fontSize: '16px',
+    fontSize: '18px',
     fontWeight: 'bold',
   },
   throwsIndicator: {
     display: 'flex',
-    gap: '4px',
+    gap: '5px',
     justifyContent: 'center',
-    marginTop: '2px',
+    marginTop: '4px',
   },
   throwDot: {
-    width: '8px',
-    height: '8px',
+    width: '10px',
+    height: '10px',
     borderRadius: '50%',
     transition: 'all 0.3s ease',
   },
-  mainArea: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '4px',
-    minHeight: '0',
+  roundIndicator: {
+    fontSize: '14px',
+    color: '#888',
+    fontWeight: 'bold',
   },
-  dartBoardContainer: {
-    width: '100%',
-    maxWidth: '250px',
-  },
-  dartBoard: {
-    width: '100%',
-    height: 'auto',
-    filter: 'drop-shadow(0 0 30px rgba(0,0,0,0.5))',
-  },
+  
+  // Scores Panel - maintenant au-dessus de la cible
   scoresPanel: {
     display: 'flex',
-    gap: '6px',
-    padding: '6px 4px',
-    overflowX: 'auto',
-    justifyContent: 'flex-start',
+    gap: '8px',
+    padding: '10px 0',
+    justifyContent: 'center',
     flexShrink: 0,
   },
   scoreCard: {
     background: 'rgba(255,255,255,0.05)',
-    borderRadius: '8px',
-    padding: '8px 10px',
+    borderRadius: '10px',
+    padding: '8px 12px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '4px',
     border: '2px solid transparent',
     transition: 'all 0.3s ease',
-    minWidth: '85px',
+    minWidth: '70px',
   },
   scoreAvatar: {
-    width: '24px',
-    height: '24px',
+    width: '28px',
+    height: '28px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '11px',
+    fontSize: '12px',
     fontWeight: 'bold',
     color: '#000',
   },
@@ -908,23 +827,33 @@ const styles = {
     fontWeight: '500',
   },
   scoreValue: {
-    fontSize: '14px',
+    fontSize: '16px',
     fontWeight: 'bold',
   },
-  playerRoundInfo: {
-    fontSize: '8px',
-    color: '#666',
+  
+  // Zone principale avec la cible
+  mainArea: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 0,
+    padding: '5px',
   },
-  roundIndicator: {
-    fontSize: '9px',
-    color: '#666',
-    marginTop: '1px',
-    display: 'block',
+  dartBoardContainer: {
+    width: '100%',
+    maxWidth: '300px',
+    maxHeight: '100%',
+    aspectRatio: '1',
+  },
+  dartBoard: {
+    width: '100%',
+    height: '100%',
   },
 
   // Game Over Screen
   gameOverContainer: {
-    minHeight: '100vh',
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -932,7 +861,6 @@ const styles = {
   },
   gameOverContent: {
     textAlign: 'center',
-    maxWidth: '100%',
     width: '100%',
   },
   trophyIcon: {
@@ -1003,8 +931,7 @@ const styles = {
     borderRadius: '25px',
     color: '#fff',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
   },
 };
-// Render app
+
 ReactDOM.createRoot(document.getElementById('root')).render(<DartsApp />);
