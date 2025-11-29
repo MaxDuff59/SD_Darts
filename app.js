@@ -2,13 +2,11 @@ const { useState } = React;
 
 // Liste des couleurs disponibles
 const AVAILABLE_COLORS = [
-  { color: '#FF6B6B', shadowColor: 'rgba(255, 107, 107, 0.6)' },
   { color: '#4ECDC4', shadowColor: 'rgba(78, 205, 196, 0.6)' },
   { color: '#FFE66D', shadowColor: 'rgba(255, 230, 109, 0.6)' },
-  { color: '#95E1D3', shadowColor: 'rgba(149, 225, 211, 0.6)' },
-  { color: '#F38181', shadowColor: 'rgba(243, 129, 129, 0.6)' },
   { color: '#AA96DA', shadowColor: 'rgba(170, 150, 218, 0.6)' },
   { color: '#FCBAD3', shadowColor: 'rgba(252, 186, 211, 0.6)' },
+  { color: '#95E1D3', shadowColor: 'rgba(149, 225, 211, 0.6)' },
   { color: '#FFB6B9', shadowColor: 'rgba(255, 182, 185, 0.6)' },
   { color: '#8EC5FC', shadowColor: 'rgba(142, 197, 252, 0.6)' },
   { color: '#FEC8D8', shadowColor: 'rgba(254, 200, 216, 0.6)' },
@@ -340,7 +338,7 @@ function ZoneGameScreen({ players, onEndGame }) {
   );
   const [gameOver, setGameOver] = useState(false);
   const [history, setHistory] = useState([]);
-  const [multiplier, setMultiplier] = useState('outer'); // outer, inner, double, triple
+  const [multiplier, setMultiplier] = useState('outer');
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -357,10 +355,8 @@ function ZoneGameScreen({ players, onEndGame }) {
   };
 
   const handleNumberClick = (number) => {
-    // Déterminer le type de zone basé sur le multiplicateur
     let zoneType;
     if (number === 25) {
-      // Bull: outer = bull outer, double = bull inner (pas de triple ni inner)
       zoneType = multiplier === 'double' ? ZONE_TYPES.BULL_INNER : ZONE_TYPES.BULL_OUTER;
     } else {
       if (multiplier === 'triple') {
@@ -374,7 +370,6 @@ function ZoneGameScreen({ players, onEndGame }) {
       }
     }
 
-    // Sauvegarder l'état actuel dans l'historique
     setHistory(prev => [...prev, {
       zones: { ...zones },
       scores: { ...scores },
@@ -403,7 +398,7 @@ function ZoneGameScreen({ players, onEndGame }) {
       newZones[zoneKey] = { owner: currentPlayer };
       newScores[currentPlayer.id] += points;
     } else if (zone.owner.id === currentPlayer.id) {
-      // Zone déjà possédée - rien ne change
+      // Zone déjà possédée
     } else {
       newScores[zone.owner.id] -= points;
       newZones[zoneKey] = { owner: null };
@@ -439,7 +434,6 @@ function ZoneGameScreen({ players, onEndGame }) {
       setThrowsLeft(newThrowsLeft);
     }
     
-    // Reset multiplier to outer after each throw
     setMultiplier('outer');
   };
 
@@ -487,13 +481,12 @@ function ZoneGameScreen({ players, onEndGame }) {
     );
   }
 
-  // Numéros pour les boutons
   const row1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const row2 = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25];
 
   return (
     <div style={styles.gameContainer}>
-      {/* Header compact */}
+      {/* Header */}
       <div style={styles.gameHeader}>
         <button onClick={onEndGame} style={styles.endGameButton}>✕</button>
         <div style={styles.currentPlayerDisplay}>
@@ -548,16 +541,15 @@ function ZoneGameScreen({ players, onEndGame }) {
         ))}
       </div>
 
-      {/* Cible (visualisation) */}
+      {/* Cible */}
       <div style={styles.mainArea}>
         <div style={styles.dartBoardContainer}>
           <DartBoard zones={zones} />
         </div>
       </div>
 
-      {/* Panneau de sélection */}
+      {/* Panneau de contrôle */}
       <div style={styles.controlPanel}>
-        {/* Sélecteur de multiplicateur */}
         <div style={styles.multiplierRow}>
           <button
             onClick={() => setMultiplier('outer')}
@@ -601,7 +593,6 @@ function ZoneGameScreen({ players, onEndGame }) {
           </button>
         </div>
 
-        {/* Ligne 1: 1-10 */}
         <div style={styles.numberRow}>
           {row1.map(num => (
             <button
@@ -614,7 +605,6 @@ function ZoneGameScreen({ players, onEndGame }) {
           ))}
         </div>
 
-        {/* Ligne 2: 11-20 + 25 */}
         <div style={styles.numberRow}>
           {row2.map(num => (
             <button
@@ -630,7 +620,6 @@ function ZoneGameScreen({ players, onEndGame }) {
           ))}
         </div>
 
-        {/* Bouton Annuler */}
         <button 
           onClick={handleUndo} 
           style={{
@@ -916,13 +905,12 @@ const styles = {
     fontWeight: 'bold',
   },
   
-  // Scores Panel - maintenant au-dessus de la cible
+  // Scores Panel
   scoresPanel: {
     display: 'flex',
     gap: '6px',
-    padding: '5px 0',
+    padding: '2px 0',
     justifyContent: 'center',
-    marginBottom: '2px',
     flexShrink: 0,
   },
   scoreCard: {
@@ -962,8 +950,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '2px 0',
+    padding: '0',
     flex: 1,
+    minHeight: 0,
   },
   dartBoardContainer: {
     width: '300px',
@@ -976,10 +965,11 @@ const styles = {
   
   // Panneau de contrôle
   controlPanel: {
-    padding: '2px 5px 15px 5px',
+    padding: '0 5px 10px 5px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '8px',
+    flexShrink: 0,
   },
   multiplierRow: {
     display: 'flex',
@@ -1027,7 +1017,7 @@ const styles = {
     padding: '12px 25px',
     borderRadius: '10px',
     cursor: 'pointer',
-    marginTop: '5px',
+    marginTop: '2px',
     alignSelf: 'center',
   },
 
