@@ -683,7 +683,7 @@ function DartsApp() {
 // Styles
 const styles = {
   app: {
-    height: '80vh',
+    height: '90vh',
     background: 'linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f1f 100%)',
     fontFamily: "'Segoe UI', system-ui, sans-serif",
     color: '#fff',
