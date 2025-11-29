@@ -1,0 +1,1027 @@
+const { useState, useCallback } = React;
+
+// Liste des couleurs disponibles
+const AVAILABLE_COLORS = [
+  { color: '#FF6B6B', shadowColor: 'rgba(255, 107, 107, 0.6)' },
+  { color: '#4ECDC4', shadowColor: 'rgba(78, 205, 196, 0.6)' },
+  { color: '#FFE66D', shadowColor: 'rgba(255, 230, 109, 0.6)' },
+  { color: '#95E1D3', shadowColor: 'rgba(149, 225, 211, 0.6)' },
+  { color: '#F38181', shadowColor: 'rgba(243, 129, 129, 0.6)' },
+  { color: '#AA96DA', shadowColor: 'rgba(170, 150, 218, 0.6)' },
+  { color: '#FCBAD3', shadowColor: 'rgba(252, 186, 211, 0.6)' },
+  { color: '#FFB6B9', shadowColor: 'rgba(255, 182, 185, 0.6)' },
+  { color: '#8EC5FC', shadowColor: 'rgba(142, 197, 252, 0.6)' },
+  { color: '#FEC8D8', shadowColor: 'rgba(254, 200, 216, 0.6)' },
+];
+
+// Liste des joueurs prédéfinis (sans couleur)
+const PREDEFINED_PLAYERS = [
+  { id: 1, name: 'Maxence' },
+  { id: 2, name: 'Gabin' },
+  { id: 3, name: 'Arnaud' },
+  { id: 4, name: 'Louis' },
+  { id: 5, name: 'Flavio' },
+  { id: 6, name: 'Florian' },
+  { id: 7, name: 'Nathanaël' },
+  { id: 8, name: 'Ben' },
+  { id: 9, name: 'Bénédicte' },
+  { id: 10, name: 'Romain' },
+  { id: 11, name: 'Xavier' },
+  { id: 12, name: 'Paul' },
+];
+
+// Fonction pour assigner des couleurs aléatoires
+const assignRandomColors = (players) => {
+  const shuffledColors = [...AVAILABLE_COLORS].sort(() => Math.random() - 0.5);
+  return players.map((player, index) => ({
+    ...player,
+    color: shuffledColors[index].color,
+    shadowColor: shuffledColors[index].shadowColor,
+  }));
+};
+
+// Points sur la cible dans l'ordre horaire en partant du haut
+const DART_NUMBERS = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+
+// Types de zones
+const ZONE_TYPES = {
+  SINGLE_OUTER: 'single_outer',
+  TRIPLE: 'triple',
+  SINGLE_INNER: 'single_inner',
+  DOUBLE: 'double',
+  BULL_OUTER: 'bull_outer',
+  BULL_INNER: 'bull_inner'
+};
+
+// Multiplicateurs de points
+const ZONE_MULTIPLIERS = {
+  [ZONE_TYPES.SINGLE_OUTER]: 1,
+  [ZONE_TYPES.TRIPLE]: 3,
+  [ZONE_TYPES.SINGLE_INNER]: 1,
+  [ZONE_TYPES.DOUBLE]: 2,
+  [ZONE_TYPES.BULL_OUTER]: 25,
+  [ZONE_TYPES.BULL_INNER]: 50
+};
+
+// Écran d'accueil - Sélection du jeu
+function HomeScreen({ onSelectGame }) {
+  const games = [
+    { id: 'zone', name: 'Zone', description: 'Capture les territoires', icon: '🎯', available: true },
+    { id: '301', name: '301', description: 'Classique countdown', icon: '🔢', available: false },
+    { id: 'cricket', name: 'Cricket', description: 'Ferme les numéros', icon: '🦗', available: false },
+  ];
+
+  return (
+    <div style={styles.homeContainer}>
+      <div style={styles.logoContainer}>
+        <div style={styles.logoIcon}>🎯</div>
+        <h1 style={styles.mainTitle}>DARTS</h1>
+        <p style={styles.subtitle}>COMPANION</p>
+      </div>
+      
+      <div style={styles.gamesGrid}>
+        {games.map((game) => (
+          <button
+            key={game.id}
+            onClick={() => game.available && onSelectGame(game.id)}
+            style={{
+              ...styles.gameCard,
+              opacity: game.available ? 1 : 0.4,
+              cursor: game.available ? 'pointer' : 'not-allowed',
+            }}
+          >
+            <span style={styles.gameIcon}>{game.icon}</span>
+            <span style={styles.gameName}>{game.name}</span>
+            <span style={styles.gameDescription}>{game.description}</span>
+            {!game.available && <span style={styles.comingSoon}>Bientôt</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Écran de sélection des joueurs
+function PlayerSelectScreen({ onStartGame, onBack }) {
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
+
+  const togglePlayer = (player) => {
+    if (selectedPlayers.find(p => p.id === player.id)) {
+      setSelectedPlayers(selectedPlayers.filter(p => p.id !== player.id));
+    } else if (selectedPlayers.length < 4) {
+      setSelectedPlayers([...selectedPlayers, player]);
+    }
+  };
+
+  const canStart = selectedPlayers.length >= 2;
+
+  return (
+    <div style={styles.selectContainer}>
+      <button onClick={onBack} style={styles.backButton}>
+        ← Retour
+      </button>
+      
+      <h2 style={styles.selectTitle}>Choisis les joueurs</h2>
+      <p style={styles.selectSubtitle}>2 à 4 joueurs • {selectedPlayers.length} sélectionné{selectedPlayers.length > 1 ? 's' : ''}</p>
+      
+      <div style={styles.playersGrid}>
+        {PREDEFINED_PLAYERS.map((player) => {
+          const isSelected = selectedPlayers.find(p => p.id === player.id);
+          const selectionIndex = selectedPlayers.findIndex(p => p.id === player.id);
+          
+          // Assigner une couleur temporaire pour l'affichage
+          const tempColor = AVAILABLE_COLORS[player.id % AVAILABLE_COLORS.length];
+          
+          return (
+            <button
+              key={player.id}
+              onClick={() => togglePlayer(player)}
+              style={{
+                ...styles.playerCard,
+                borderColor: isSelected ? tempColor.color : 'rgba(255,255,255,0.1)',
+                boxShadow: isSelected ? `0 0 20px ${tempColor.shadowColor}` : 'none',
+                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+              }}
+            >
+              <div 
+                style={{
+                  ...styles.playerAvatar,
+                  background: `linear-gradient(135deg, ${tempColor.color}, ${tempColor.color}88)`,
+                }}
+              >
+                {player.name[0]}
+              </div>
+              <span style={styles.playerName}>{player.name}</span>
+              {isSelected && (
+                <span style={{...styles.playerOrder, backgroundColor: tempColor.color}}>
+                  {selectionIndex + 1}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      
+      <button
+        onClick={() => canStart && onStartGame(selectedPlayers)}
+        style={{
+          ...styles.startButton,
+          opacity: canStart ? 1 : 0.4,
+          cursor: canStart ? 'pointer' : 'not-allowed',
+        }}
+      >
+        {canStart ? 'Commencer la partie !' : 'Sélectionne au moins 2 joueurs'}
+      </button>
+    </div>
+  );
+}
+
+// Composant de la cible de fléchettes
+function DartBoard({ zones, currentPlayer, onZoneClick }) {
+  const centerX = 200;
+  const centerY = 200;
+  
+  // Rayons des différentes zones
+  const radii = {
+    bullInner: 12,
+    bullOuter: 30,
+    tripleInner: 95,
+    tripleOuter: 107,
+    doubleInner: 160,
+    doubleOuter: 170,
+    outer: 170,
+  };
+
+  // Créer un segment de la cible
+  const createSegment = (index, innerRadius, outerRadius, zoneType) => {
+    const segmentAngle = 360 / 20;
+    const startAngle = (index * segmentAngle - 99) * (Math.PI / 180);
+    const endAngle = ((index + 1) * segmentAngle - 99) * (Math.PI / 180);
+    
+    const x1Inner = centerX + innerRadius * Math.cos(startAngle);
+    const y1Inner = centerY + innerRadius * Math.sin(startAngle);
+    const x2Inner = centerX + innerRadius * Math.cos(endAngle);
+    const y2Inner = centerY + innerRadius * Math.sin(endAngle);
+    
+    const x1Outer = centerX + outerRadius * Math.cos(startAngle);
+    const y1Outer = centerY + outerRadius * Math.sin(startAngle);
+    const x2Outer = centerX + outerRadius * Math.cos(endAngle);
+    const y2Outer = centerY + outerRadius * Math.sin(endAngle);
+    
+    const largeArc = segmentAngle > 180 ? 1 : 0;
+    
+    const d = `
+      M ${x1Inner} ${y1Inner}
+      A ${innerRadius} ${innerRadius} 0 ${largeArc} 1 ${x2Inner} ${y2Inner}
+      L ${x2Outer} ${y2Outer}
+      A ${outerRadius} ${outerRadius} 0 ${largeArc} 0 ${x1Outer} ${y1Outer}
+      Z
+    `;
+    
+    return d;
+  };
+
+  // Couleur de base selon la position
+  const getBaseColor = (index, zoneType) => {
+    const isEven = index % 2 === 0;
+    if (zoneType === ZONE_TYPES.DOUBLE || zoneType === ZONE_TYPES.TRIPLE) {
+      return isEven ? '#E74C3C' : '#27AE60';
+    }
+    return isEven ? '#1a1a2e' : '#F5DEB3';
+  };
+
+  // Obtenir la couleur finale (avec possession)
+  const getZoneColor = (number, zoneType) => {
+    const zoneKey = `${number}-${zoneType}`;
+    const zone = zones[zoneKey];
+    if (zone && zone.owner) {
+      return zone.owner.color;
+    }
+    const index = DART_NUMBERS.indexOf(number);
+    return getBaseColor(index, zoneType);
+  };
+
+  // Rendre un segment cliquable
+  const renderSegment = (index, innerRadius, outerRadius, zoneType) => {
+    const number = DART_NUMBERS[index];
+    const zoneKey = `${number}-${zoneType}`;
+    const zone = zones[zoneKey];
+    const isOwned = zone && zone.owner;
+    
+    return (
+      <path
+        key={zoneKey}
+        d={createSegment(index, innerRadius, outerRadius, zoneType)}
+        fill={getZoneColor(number, zoneType)}
+        stroke="#0f0f1a"
+        strokeWidth="1"
+        style={{
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          filter: isOwned ? `drop-shadow(0 0 8px ${zone.owner.color})` : 'none',
+        }}
+        onClick={() => onZoneClick(number, zoneType)}
+        onMouseEnter={(e) => {
+          e.target.style.filter = `brightness(1.3) drop-shadow(0 0 10px ${currentPlayer.color})`;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.filter = isOwned ? `drop-shadow(0 0 8px ${zone.owner.color})` : 'none';
+        }}
+      />
+    );
+  };
+
+  // Numéros autour de la cible
+  const renderNumbers = () => {
+    return DART_NUMBERS.map((num, index) => {
+      const segmentAngle = 360 / 20;
+      const angle = (index * segmentAngle - 90) * (Math.PI / 180);
+      const radius = 188;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      
+      return (
+        <text
+          key={`num-${num}`}
+          x={x}
+          y={y}
+          fill="#ffffff"
+          fontSize="14"
+          fontWeight="bold"
+          fontFamily="'Orbitron', monospace"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {num}
+        </text>
+      );
+    });
+  };
+
+  return (
+    <svg viewBox="0 0 400 400" style={styles.dartBoard}>
+      {/* Cercle extérieur décoratif */}
+      <circle cx={centerX} cy={centerY} r={195} fill="#0a0a15" stroke="#333" strokeWidth="2" />
+      
+      {/* Segments - du plus extérieur au plus intérieur */}
+      {/* Singles externes (entre double et triple) */}
+      {DART_NUMBERS.map((_, index) => 
+        renderSegment(index, radii.tripleOuter, radii.doubleInner, ZONE_TYPES.SINGLE_OUTER)
+      )}
+      
+      {/* Doubles (anneau extérieur) */}
+      {DART_NUMBERS.map((_, index) => 
+        renderSegment(index, radii.doubleInner, radii.doubleOuter, ZONE_TYPES.DOUBLE)
+      )}
+      
+      {/* Triples */}
+      {DART_NUMBERS.map((_, index) => 
+        renderSegment(index, radii.tripleInner, radii.tripleOuter, ZONE_TYPES.TRIPLE)
+      )}
+      
+      {/* Singles internes (entre bull et triple) */}
+      {DART_NUMBERS.map((_, index) => 
+        renderSegment(index, radii.bullOuter, radii.tripleInner, ZONE_TYPES.SINGLE_INNER)
+      )}
+      
+      {/* Bull externe */}
+      <circle
+        cx={centerX}
+        cy={centerY}
+        r={radii.bullOuter}
+        fill={zones['bull-outer']?.owner ? zones['bull-outer'].owner.color : '#27AE60'}
+        stroke="#0f0f1a"
+        strokeWidth="1"
+        style={{ 
+          cursor: 'pointer',
+          filter: zones['bull-outer']?.owner ? `drop-shadow(0 0 8px ${zones['bull-outer'].owner.color})` : 'none',
+        }}
+        onClick={() => onZoneClick('bull', ZONE_TYPES.BULL_OUTER)}
+        onMouseEnter={(e) => {
+          e.target.style.filter = `brightness(1.3) drop-shadow(0 0 10px ${currentPlayer.color})`;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.filter = zones['bull-outer']?.owner ? `drop-shadow(0 0 8px ${zones['bull-outer'].owner.color})` : 'none';
+        }}
+      />
+      
+      {/* Bull interne (bullseye) */}
+      <circle
+        cx={centerX}
+        cy={centerY}
+        r={radii.bullInner}
+        fill={zones['bull-inner']?.owner ? zones['bull-inner'].owner.color : '#E74C3C'}
+        stroke="#0f0f1a"
+        strokeWidth="1"
+        style={{ 
+          cursor: 'pointer',
+          filter: zones['bull-inner']?.owner ? `drop-shadow(0 0 8px ${zones['bull-inner'].owner.color})` : 'none',
+        }}
+        onClick={() => onZoneClick('bull', ZONE_TYPES.BULL_INNER)}
+        onMouseEnter={(e) => {
+          e.target.style.filter = `brightness(1.3) drop-shadow(0 0 10px ${currentPlayer.color})`;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.filter = zones['bull-inner']?.owner ? `drop-shadow(0 0 8px ${zones['bull-inner'].owner.color})` : 'none';
+        }}
+      />
+      
+      {/* Numéros */}
+      {renderNumbers()}
+    </svg>
+  );
+}
+
+// Écran de jeu Zone
+function ZoneGameScreen({ players, onEndGame }) {
+  const MAX_ROUNDS = 10;
+  const [zones, setZones] = useState({});
+  const [scores, setScores] = useState(
+    players.reduce((acc, player) => ({ ...acc, [player.id]: 0 }), {})
+  );
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [throwsLeft, setThrowsLeft] = useState(3);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [playerRounds, setPlayerRounds] = useState(
+    players.reduce((acc, player) => ({ ...acc, [player.id]: 1 }), {})
+  );
+  const [gameOver, setGameOver] = useState(false);
+
+  const currentPlayer = players[currentPlayerIndex];
+
+  const handleZoneClick = useCallback((number, zoneType) => {
+    const zoneKey = number === 'bull' 
+      ? (zoneType === ZONE_TYPES.BULL_INNER ? 'bull-inner' : 'bull-outer')
+      : `${number}-${zoneType}`;
+    
+    const zone = zones[zoneKey];
+    let newZones = { ...zones };
+    let newScores = { ...scores };
+
+    // Calculer les points
+    let points = 0;
+    if (number === 'bull') {
+      points = ZONE_MULTIPLIERS[zoneType];
+    } else {
+      const multiplier = zoneType === ZONE_TYPES.TRIPLE ? 3 : 
+                         zoneType === ZONE_TYPES.DOUBLE ? 2 : 1;
+      points = number * multiplier;
+    }
+
+    if (!zone || !zone.owner) {
+      // Zone neutre - le joueur la capture
+      newZones[zoneKey] = { owner: currentPlayer };
+      newScores[currentPlayer.id] += points;
+    } else if (zone.owner.id === currentPlayer.id) {
+      // Zone déjà possédée - rien ne change
+    } else {
+      // Zone adverse - devient neutre et l'adversaire perd ses points
+      newScores[zone.owner.id] -= points;
+      newZones[zoneKey] = { owner: null };
+    }
+
+    setZones(newZones);
+    setScores(newScores);
+
+    // Gestion des lancers
+    const newThrowsLeft = throwsLeft - 1;
+    if (newThrowsLeft === 0) {
+      // Fin du tour pour ce joueur
+      const newPlayerRounds = { ...playerRounds };
+      newPlayerRounds[currentPlayer.id] = playerRounds[currentPlayer.id] + 1;
+      
+      // Trouver le prochain joueur qui n'a pas fini
+      let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      let checkedPlayers = 0;
+      
+      while (newPlayerRounds[players[nextPlayerIndex].id] > MAX_ROUNDS && checkedPlayers < players.length) {
+        nextPlayerIndex = (nextPlayerIndex + 1) % players.length;
+        checkedPlayers++;
+      }
+      
+      // Vérifier si tous les joueurs ont fini
+      const allPlayersFinished = players.every(p => newPlayerRounds[p.id] > MAX_ROUNDS);
+      
+      if (allPlayersFinished) {
+        setGameOver(true);
+      } else {
+        setCurrentPlayerIndex(nextPlayerIndex);
+        setCurrentRound(newPlayerRounds[players[nextPlayerIndex].id]);
+        setThrowsLeft(3);
+      }
+      
+      setPlayerRounds(newPlayerRounds);
+    } else {
+      setThrowsLeft(newThrowsLeft);
+    }
+  }, [zones, scores, currentPlayer, currentPlayerIndex, players, throwsLeft]);
+
+  // Trier les joueurs par score pour le classement
+  const rankedPlayers = [...players].sort((a, b) => scores[b.id] - scores[a.id]);
+
+  // Écran de fin de partie
+  if (gameOver) {
+    const winner = rankedPlayers[0];
+    return (
+      <div style={styles.gameOverContainer}>
+        <div style={styles.gameOverContent}>
+          <div style={styles.trophyIcon}>🏆</div>
+          <h2 style={styles.gameOverTitle}>Partie terminée !</h2>
+          <div style={{
+            ...styles.winnerCard,
+            borderColor: winner.color,
+            boxShadow: `0 0 40px ${winner.shadowColor}`,
+          }}>
+            <div style={{
+              ...styles.winnerAvatar,
+              background: `linear-gradient(135deg, ${winner.color}, ${winner.color}88)`,
+            }}>
+              {winner.name[0]}
+            </div>
+            <span style={{ ...styles.winnerName, color: winner.color }}>{winner.name}</span>
+            <span style={styles.winnerScore}>{scores[winner.id]} pts</span>
+          </div>
+          
+          <div style={styles.finalRankings}>
+            {rankedPlayers.map((player, index) => (
+              <div key={player.id} style={styles.finalRankItem}>
+                <span style={styles.finalRankPosition}>
+                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                </span>
+                <span style={{ color: player.color, fontWeight: 'bold' }}>{player.name}</span>
+                <span style={styles.finalRankScore}>{scores[player.id]} pts</span>
+              </div>
+            ))}
+          </div>
+          
+          <button onClick={onEndGame} style={styles.newGameButton}>
+            Nouvelle partie
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.gameContainer}>
+      {/* Header avec joueur actuel */}
+      <div style={styles.gameHeader}>
+        <button onClick={onEndGame} style={styles.endGameButton}>
+          ✕ Quitter
+        </button>
+        <div style={styles.currentPlayerDisplay}>
+          <span style={styles.currentPlayerLabel}>Tour de</span>
+          <span style={{
+            ...styles.currentPlayerName,
+            color: currentPlayer.color,
+            textShadow: `0 0 20px ${currentPlayer.shadowColor}`,
+          }}>
+            {currentPlayer.name}
+          </span>
+          <div style={styles.throwsIndicator}>
+            {[1, 2, 3].map(i => (
+              <span
+                key={i}
+                style={{
+                  ...styles.throwDot,
+                  backgroundColor: i <= throwsLeft ? currentPlayer.color : '#333',
+                  boxShadow: i <= throwsLeft ? `0 0 10px ${currentPlayer.color}` : 'none',
+                }}
+              />
+            ))}
+          </div>
+          <span style={styles.roundIndicator}>Tour {playerRounds[currentPlayer.id]}/{MAX_ROUNDS}</span>
+        </div>
+      </div>
+
+      {/* Zone principale avec cible */}
+      <div style={styles.mainArea}>
+        <div style={styles.dartBoardContainer}>
+          <DartBoard
+            zones={zones}
+            currentPlayer={currentPlayer}
+            onZoneClick={handleZoneClick}
+          />
+        </div>
+      </div>
+
+      {/* Scores - dans l'ordre de jeu */}
+      <div style={styles.scoresPanel}>
+        {players.map((player) => (
+          <div
+            key={player.id}
+            style={{
+              ...styles.scoreCard,
+              borderColor: player.id === currentPlayer.id ? player.color : 'transparent',
+              boxShadow: player.id === currentPlayer.id ? `0 0 15px ${player.shadowColor}` : 'none',
+            }}
+          >
+            <div
+              style={{
+                ...styles.scoreAvatar,
+                background: `linear-gradient(135deg, ${player.color}, ${player.color}88)`,
+              }}
+            >
+              {player.name[0]}
+            </div>
+            <span style={styles.scoreName}>{player.name}</span>
+            <span style={{
+              ...styles.scoreValue,
+              color: player.color,
+            }}>
+              {scores[player.id]}
+            </span>
+            <span style={styles.playerRoundInfo}>
+              {playerRounds[player.id] > MAX_ROUNDS ? '✓' : `${playerRounds[player.id]}/${MAX_ROUNDS}`}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Application principale
+function DartsApp() {
+  const [screen, setScreen] = useState('home');
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [players, setPlayers] = useState([]);
+
+  const handleSelectGame = (gameId) => {
+    setSelectedGame(gameId);
+    setScreen('players');
+  };
+
+  const handleStartGame = (selectedPlayers) => {
+    // Assigner des couleurs aléatoires aux joueurs sélectionnés
+    const playersWithColors = assignRandomColors(selectedPlayers);
+    // Mélanger l'ordre des joueurs aléatoirement
+    const shuffledPlayers = [...playersWithColors].sort(() => Math.random() - 0.5);
+    setPlayers(shuffledPlayers);
+    setScreen('game');
+  };
+
+  const handleEndGame = () => {
+    setScreen('home');
+    setSelectedGame(null);
+    setPlayers([]);
+  };
+
+  return (
+    <div style={styles.app}>
+      {screen === 'home' && (
+        <HomeScreen onSelectGame={handleSelectGame} />
+      )}
+      {screen === 'players' && (
+        <PlayerSelectScreen
+          onStartGame={handleStartGame}
+          onBack={() => setScreen('home')}
+        />
+      )}
+      {screen === 'game' && selectedGame === 'zone' && (
+        <ZoneGameScreen
+          players={players}
+          onEndGame={handleEndGame}
+        />
+      )}
+    </div>
+  );
+}
+
+// Styles
+const styles = {
+  app: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f1f 100%)',
+    fontFamily: "'Segoe UI', system-ui, sans-serif",
+    color: '#fff',
+    overflow: 'auto',
+  },
+  
+  // Home Screen
+  homeContainer: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    gap: '40px',
+  },
+  logoContainer: {
+    textAlign: 'center',
+  },
+  logoIcon: {
+    fontSize: '80px',
+    marginBottom: '10px',
+    animation: 'pulse 2s infinite',
+  },
+  mainTitle: {
+    fontSize: '48px',
+    fontWeight: '900',
+    letterSpacing: '12px',
+    margin: '0',
+    background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    textShadow: 'none',
+  },
+  subtitle: {
+    fontSize: '18px',
+    letterSpacing: '8px',
+    color: '#888',
+    margin: '5px 0 0 0',
+  },
+  gamesGrid: {
+    display: 'flex',
+    gap: '20px',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    maxWidth: '600px',
+  },
+  gameCard: {
+    background: 'rgba(255,255,255,0.05)',
+    border: '2px solid rgba(255,255,255,0.1)',
+    borderRadius: '20px',
+    padding: '30px',
+    width: '160px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s ease',
+    position: 'relative',
+  },
+  gameIcon: {
+    fontSize: '40px',
+  },
+  gameName: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+  },
+  gameDescription: {
+    fontSize: '12px',
+    color: '#888',
+  },
+  comingSoon: {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    fontSize: '10px',
+    background: '#333',
+    padding: '3px 8px',
+    borderRadius: '10px',
+  },
+
+  // Player Select Screen
+  selectContainer: {
+    minHeight: '100vh',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    background: 'none',
+    border: 'none',
+    color: '#888',
+    fontSize: '16px',
+    cursor: 'pointer',
+    padding: '10px',
+    marginBottom: '20px',
+  },
+  selectTitle: {
+    fontSize: '28px',
+    margin: '0',
+  },
+  selectSubtitle: {
+    color: '#888',
+    margin: '10px 0 30px 0',
+  },
+  playersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+    gap: '15px',
+    maxWidth: '600px',
+    width: '100%',
+    padding: '0 20px',
+  },
+  playerCard: {
+    background: 'rgba(255,255,255,0.05)',
+    border: '2px solid rgba(255,255,255,0.1)',
+    borderRadius: '16px',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    position: 'relative',
+  },
+  playerAvatar: {
+    width: '50px',
+    height: '50px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  playerName: {
+    fontSize: '16px',
+    fontWeight: '500',
+  },
+  playerOrder: {
+    position: 'absolute',
+    top: '-8px',
+    right: '-8px',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  startButton: {
+    marginTop: '40px',
+    padding: '18px 40px',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
+    border: 'none',
+    borderRadius: '30px',
+    color: '#fff',
+    transition: 'all 0.3s ease',
+  },
+
+  // Game Screen
+  gameContainer: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '10px',
+  },
+  gameHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px',
+  },
+  endGameButton: {
+    background: 'rgba(255,255,255,0.1)',
+    border: 'none',
+    color: '#888',
+    fontSize: '16px',
+    padding: '10px 15px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+  },
+  currentPlayerDisplay: {
+    textAlign: 'center',
+    flex: 1,
+  },
+  currentPlayerLabel: {
+    fontSize: '12px',
+    color: '#888',
+    display: 'block',
+  },
+  currentPlayerName: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+  },
+  throwsIndicator: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center',
+    marginTop: '8px',
+  },
+  throwDot: {
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    transition: 'all 0.3s ease',
+  },
+  mainArea: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px',
+  },
+  dartBoardContainer: {
+    width: '100%',
+    maxWidth: '400px',
+  },
+  dartBoard: {
+    width: '100%',
+    height: 'auto',
+    filter: 'drop-shadow(0 0 30px rgba(0,0,0,0.5))',
+  },
+  lastAction: {
+    textAlign: 'center',
+    padding: '12px',
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '10px',
+    margin: '10px',
+    fontSize: '14px',
+    color: '#4ECDC4',
+  },
+  scoresPanel: {
+    display: 'flex',
+    gap: '10px',
+    padding: '10px',
+    overflowX: 'auto',
+    justifyContent: 'center',
+  },
+  scoreCard: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '12px',
+    padding: '12px 16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    border: '2px solid transparent',
+    transition: 'all 0.3s ease',
+    minWidth: '120px',
+  },
+  rankBadge: {
+    fontSize: '10px',
+    color: '#888',
+    fontWeight: 'bold',
+  },
+  scoreAvatar: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  scoreName: {
+    fontSize: '14px',
+    fontWeight: '500',
+    flex: 1,
+  },
+  scoreValue: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+  },
+  playerRoundInfo: {
+    fontSize: '10px',
+    color: '#666',
+    marginLeft: '5px',
+  },
+  gameLog: {
+    padding: '10px',
+    maxHeight: '80px',
+    overflow: 'hidden',
+  },
+  logEntry: {
+    fontSize: '12px',
+    color: '#666',
+    padding: '4px 0',
+  },
+  
+  // Round indicator
+  roundIndicator: {
+    fontSize: '11px',
+    color: '#666',
+    marginTop: '4px',
+    display: 'block',
+  },
+  
+  // Game Over Screen
+  gameOverContainer: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+  },
+  gameOverContent: {
+    textAlign: 'center',
+    maxWidth: '400px',
+    width: '100%',
+  },
+  trophyIcon: {
+    fontSize: '80px',
+    marginBottom: '10px',
+  },
+  gameOverTitle: {
+    fontSize: '32px',
+    margin: '0 0 30px 0',
+    color: '#fff',
+  },
+  winnerCard: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '20px',
+    padding: '30px',
+    border: '3px solid',
+    marginBottom: '30px',
+  },
+  winnerAvatar: {
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '36px',
+    fontWeight: 'bold',
+    color: '#000',
+    margin: '0 auto 15px auto',
+  },
+  winnerName: {
+    fontSize: '28px',
+    fontWeight: 'bold',
+    display: 'block',
+    marginBottom: '5px',
+  },
+  winnerScore: {
+    fontSize: '24px',
+    color: '#888',
+  },
+  finalRankings: {
+    background: 'rgba(255,255,255,0.03)',
+    borderRadius: '12px',
+    padding: '15px',
+    marginBottom: '30px',
+  },
+  finalRankItem: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '10px 5px',
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
+  },
+  finalRankPosition: {
+    width: '30px',
+    fontSize: '16px',
+  },
+  finalRankScore: {
+    color: '#888',
+  },
+  newGameButton: {
+    padding: '18px 50px',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    background: 'linear-gradient(135deg, #FF6B6B, #4ECDC4)',
+    border: 'none',
+    borderRadius: '30px',
+    color: '#fff',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  },
+};
+// Render app
+ReactDOM.createRoot(document.getElementById('root')).render(<DartsApp />);
