@@ -22,12 +22,12 @@ const PREDEFINED_PLAYERS = [
   { id: 4, name: 'Louis' },
   { id: 5, name: 'Flavio' },
   { id: 6, name: 'Florian' },
-  { id: 7, name: 'Nathanaël' },
-  { id: 8, name: 'Ben' },
-  { id: 9, name: 'Bénédicte' },
-  { id: 10, name: 'Romain' },
-  { id: 11, name: 'Xavier' },
-  { id: 12, name: 'Paul' },
+  // { id: 7, name: 'Nathanaël' },
+  // { id: 8, name: 'Ben' },
+  // { id: 9, name: 'Bénédicte' },
+  // { id: 10, name: 'Romain' },
+  // { id: 11, name: 'Xavier' },
+  // { id: 12, name: 'Paul' },
 ];
 
 // Fonction pour assigner des couleurs aléatoires
