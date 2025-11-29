@@ -427,7 +427,7 @@ function ZoneGameScreen({ players, onEndGame }) {
     const newThrowsLeft = throwsLeft - 1;
     if (newThrowsLeft === 0) {
       // Fin du tour pour ce joueur
-      const newPlayerRounds = { ...playerRounds };
+      const newPlayerRounds =
       newPlayerRounds[currentPlayer.id] = playerRounds[currentPlayer.id] + 1;
       
       // Trouver le prochain joueur qui n'a pas fini
@@ -808,23 +808,26 @@ const styles = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    padding: '8px',
+    padding: '5px',
+    gap: '5px',
   },
   gameHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '8px 5px',
-    gap: '10px',
+    padding: '6px 5px',
+    gap: '8px',
+    flexShrink: 0,
   },
   endGameButton: {
     background: 'rgba(255,255,255,0.1)',
     border: 'none',
     color: '#888',
-    fontSize: '14px',
-    padding: '8px 12px',
+    fontSize: '12px',
+    padding: '6px 10px',
     borderRadius: '8px',
     cursor: 'pointer',
+    flexShrink: 0,
   },
   currentPlayerDisplay: {
     textAlign: 'center',
@@ -832,23 +835,23 @@ const styles = {
     minWidth: 0,
   },
   currentPlayerLabel: {
-    fontSize: '10px',
+    fontSize: '9px',
     color: '#888',
     display: 'block',
   },
   currentPlayerName: {
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: 'bold',
   },
   throwsIndicator: {
     display: 'flex',
-    gap: '6px',
+    gap: '4px',
     justifyContent: 'center',
-    marginTop: '4px',
+    marginTop: '2px',
   },
   throwDot: {
-    width: '10px',
-    height: '10px',
+    width: '8px',
+    height: '8px',
     borderRadius: '50%',
     transition: 'all 0.3s ease',
   },
@@ -857,93 +860,68 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '8px',
-    minHeight: '300px',
+    padding: '4px',
+    minHeight: '0',
   },
   dartBoardContainer: {
     width: '100%',
-    maxWidth: '300px',
+    maxWidth: '250px',
   },
   dartBoard: {
     width: '100%',
     height: 'auto',
     filter: 'drop-shadow(0 0 30px rgba(0,0,0,0.5))',
   },
-  lastAction: {
-    textAlign: 'center',
-    padding: '10px',
-    background: 'rgba(255,255,255,0.05)',
-    borderRadius: '8px',
-    margin: '8px',
-    fontSize: '12px',
-    color: '#4ECDC4',
-  },
   scoresPanel: {
     display: 'flex',
-    gap: '8px',
-    padding: '8px',
+    gap: '6px',
+    padding: '6px 4px',
     overflowX: 'auto',
     justifyContent: 'flex-start',
+    flexShrink: 0,
   },
   scoreCard: {
     background: 'rgba(255,255,255,0.05)',
-    borderRadius: '10px',
-    padding: '10px 12px',
+    borderRadius: '8px',
+    padding: '8px 10px',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: '8px',
+    gap: '4px',
     border: '2px solid transparent',
     transition: 'all 0.3s ease',
-    minWidth: '100px',
-    flexDirection: 'column',
-  },
-  rankBadge: {
-    fontSize: '9px',
-    color: '#888',
-    fontWeight: 'bold',
+    minWidth: '85px',
   },
   scoreAvatar: {
-    width: '28px',
-    height: '28px',
+    width: '24px',
+    height: '24px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 'bold',
     color: '#000',
   },
   scoreName: {
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: '500',
   },
   scoreValue: {
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 'bold',
   },
   playerRoundInfo: {
+    fontSize: '8px',
+    color: '#666',
+  },
+  roundIndicator: {
     fontSize: '9px',
     color: '#666',
-  },
-  gameLog: {
-    padding: '8px',
-    maxHeight: '60px',
-    overflow: 'hidden',
-  },
-  logEntry: {
-    fontSize: '11px',
-    color: '#666',
-    padding: '3px 0',
-  },
-  
-  // Round indicator
-  roundIndicator: {
-    fontSize: '10px',
-    color: '#666',
-    marginTop: '2px',
+    marginTop: '1px',
     display: 'block',
   },
-  
+
   // Game Over Screen
   gameOverContainer: {
     minHeight: '100vh',
