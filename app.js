@@ -340,7 +340,7 @@ function ZoneGameScreen({ players, onEndGame }) {
   );
   const [gameOver, setGameOver] = useState(false);
   const [history, setHistory] = useState([]);
-  const [multiplier, setMultiplier] = useState('simple'); // simple, double, triple
+  const [multiplier, setMultiplier] = useState('outer'); // outer, inner, double, triple
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -360,13 +360,15 @@ function ZoneGameScreen({ players, onEndGame }) {
     // Déterminer le type de zone basé sur le multiplicateur
     let zoneType;
     if (number === 25) {
-      // Bull: simple = bull outer, double = bull inner (pas de triple)
+      // Bull: outer = bull outer, double = bull inner (pas de triple ni inner)
       zoneType = multiplier === 'double' ? ZONE_TYPES.BULL_INNER : ZONE_TYPES.BULL_OUTER;
     } else {
       if (multiplier === 'triple') {
         zoneType = ZONE_TYPES.TRIPLE;
       } else if (multiplier === 'double') {
         zoneType = ZONE_TYPES.DOUBLE;
+      } else if (multiplier === 'inner') {
+        zoneType = ZONE_TYPES.SINGLE_INNER;
       } else {
         zoneType = ZONE_TYPES.SINGLE_OUTER;
       }
@@ -437,8 +439,8 @@ function ZoneGameScreen({ players, onEndGame }) {
       setThrowsLeft(newThrowsLeft);
     }
     
-    // Reset multiplier to simple after each throw
-    setMultiplier('simple');
+    // Reset multiplier to outer after each throw
+    setMultiplier('outer');
   };
 
   const rankedPlayers = [...players].sort((a, b) => scores[b.id] - scores[a.id]);
@@ -558,14 +560,24 @@ function ZoneGameScreen({ players, onEndGame }) {
         {/* Sélecteur de multiplicateur */}
         <div style={styles.multiplierRow}>
           <button
-            onClick={() => setMultiplier('simple')}
+            onClick={() => setMultiplier('outer')}
             style={{
               ...styles.multiplierButton,
-              background: multiplier === 'simple' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
-              color: multiplier === 'simple' ? '#000' : '#fff',
+              background: multiplier === 'outer' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
+              color: multiplier === 'outer' ? '#000' : '#fff',
             }}
           >
-            Simple
+            Ext
+          </button>
+          <button
+            onClick={() => setMultiplier('inner')}
+            style={{
+              ...styles.multiplierButton,
+              background: multiplier === 'inner' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
+              color: multiplier === 'inner' ? '#000' : '#fff',
+            }}
+          >
+            Int
           </button>
           <button
             onClick={() => setMultiplier('double')}
@@ -911,6 +923,7 @@ const styles = {
     padding: '5px 0',
     justifyContent: 'center',
     flexShrink: 0,
+    marginBottom: '10px',
   },
   scoreCard: {
     background: 'rgba(255,255,255,0.05)',
@@ -950,10 +963,11 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '0 5px',
+    marginBottom: '10px',
   },
   dartBoardContainer: {
-    width: '180px',
-    height: '180px',
+    width: '220px',
+    height: '220px',
   },
   dartBoard: {
     width: '100%',
@@ -974,11 +988,11 @@ const styles = {
   },
   multiplierButton: {
     flex: 1,
-    maxWidth: '100px',
+    maxWidth: '80px',
     padding: '10px 5px',
     border: 'none',
     borderRadius: '8px',
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: 'bold',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
