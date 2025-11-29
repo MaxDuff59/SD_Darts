@@ -955,7 +955,7 @@ const styles = {
     minHeight: 0,
   },
   dartBoardContainer: {
-    width: '300px',
+    width: '500px',
     height: '300px',
   },
   dartBoard: {
