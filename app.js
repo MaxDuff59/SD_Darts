@@ -158,14 +158,88 @@ function PlayerSelectScreen({ onStartGame, onBack }) {
           cursor: canStart ? 'pointer' : 'not-allowed',
         }}
       >
-        {canStart ? 'Commencer la partie !' : 'Sélectionne au moins 2 joueurs'}
+        {canStart ? 'Continuer' : 'Sélectionne au moins 2 joueurs'}
       </button>
     </div>
   );
 }
 
-// Composant de la cible de fléchettes (VISUALISATION UNIQUEMENT)
-function DartBoard({ zones }) {
+// Nouvel écran d'options
+function GameOptionsScreen({ onStartGame, onBack }) {
+  const [touchMode, setTouchMode] = useState(false);
+  const [stealZones, setStealZones] = useState(false);
+
+  return (
+    <div style={styles.selectContainer}>
+      <button onClick={onBack} style={styles.backButton}>
+        ← Retour
+      </button>
+      
+      <h2 style={styles.selectTitle}>Options de jeu</h2>
+      <p style={styles.selectSubtitle}>Configure ton expérience</p>
+      
+      <div style={styles.optionsContainer}>
+        <div style={styles.optionCard}>
+          <div style={styles.optionHeader}>
+            <div style={styles.optionTextContainer}>
+              <h3 style={styles.optionTitle}>🎯 Cible tactile</h3>
+              <p style={styles.optionDescription}>
+                Clique directement sur la cible au lieu d'utiliser les boutons
+              </p>
+            </div>
+            <button
+              onClick={() => setTouchMode(!touchMode)}
+              style={{
+                ...styles.toggleButton,
+                backgroundColor: touchMode ? '#4CAF50' : 'rgba(255, 255, 255, 0.15)',
+                border: touchMode ? '2px solid #4CAF50' : '2px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <div style={{
+                ...styles.toggleSlider,
+                transform: touchMode ? 'translateX(28px)' : 'translateX(2px)',
+              }} />
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.optionCard}>
+          <div style={styles.optionHeader}>
+            <div style={styles.optionTextContainer}>
+              <h3 style={styles.optionTitle}>⚔️ Vol de cibles</h3>
+              <p style={styles.optionDescription}>
+                Prends les points directement au lieu de neutraliser la zone
+              </p>
+            </div>
+            <button
+              onClick={() => setStealZones(!stealZones)}
+              style={{
+                ...styles.toggleButton,
+                backgroundColor: stealZones ? '#4CAF50' : 'rgba(255, 255, 255, 0.15)',
+                border: stealZones ? '2px solid #4CAF50' : '2px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <div style={{
+                ...styles.toggleSlider,
+                transform: stealZones ? 'translateX(28px)' : 'translateX(2px)',
+              }} />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <button
+        onClick={() => onStartGame({ touchMode, stealZones })}
+        style={styles.startButton}
+      >
+        Commencer la partie ! 🚀
+      </button>
+    </div>
+  );
+}
+
+// Composant de la cible de fléchettes
+function DartBoard({ zones, onZoneClick, touchMode, currentPlayer }) {
   const centerX = 200;
   const centerY = 200;
   
@@ -177,6 +251,63 @@ function DartBoard({ zones }) {
     doubleInner: 160,
     doubleOuter: 170,
     outer: 170,
+  };
+
+  // Fonction pour détecter dans quelle zone on a cliqué
+  const detectZone = (x, y) => {
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Bulls
+    if (distance <= radii.bullInner) {
+      return { number: 25, zoneType: ZONE_TYPES.BULL_INNER };
+    }
+    if (distance <= radii.bullOuter) {
+      return { number: 25, zoneType: ZONE_TYPES.BULL_OUTER };
+    }
+    
+    // Hors de la cible
+    if (distance > radii.doubleOuter) {
+      return null;
+    }
+    
+    // Calculer l'angle
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    angle = (angle + 90 + 360) % 360; // Ajuster pour que 0° soit en haut
+    
+    // Trouver le numéro
+    const segmentAngle = 360 / 20;
+    const segmentIndex = Math.floor(angle / segmentAngle);
+    const number = DART_NUMBERS[segmentIndex];
+    
+    // Déterminer le type de zone selon la distance
+    let zoneType;
+    if (distance <= radii.tripleInner) {
+      zoneType = ZONE_TYPES.SINGLE_INNER;
+    } else if (distance <= radii.tripleOuter) {
+      zoneType = ZONE_TYPES.TRIPLE;
+    } else if (distance <= radii.doubleInner) {
+      zoneType = ZONE_TYPES.SINGLE_OUTER;
+    } else {
+      zoneType = ZONE_TYPES.DOUBLE;
+    }
+    
+    return { number, zoneType };
+  };
+
+  const handleClick = (e) => {
+    if (!touchMode || !onZoneClick) return;
+    
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 400;
+    const y = ((e.clientY - rect.top) / rect.height) * 400;
+    
+    const zone = detectZone(x, y);
+    if (zone) {
+      onZoneClick(zone.number, zone.zoneType);
+    }
   };
 
   const createSegment = (index, innerRadius, outerRadius, zoneType) => {
@@ -241,6 +372,7 @@ function DartBoard({ zones }) {
         style={{
           transition: 'all 0.3s ease',
           filter: isOwned ? `drop-shadow(0 0 6px ${zone.owner.color})` : 'none',
+          cursor: touchMode ? 'pointer' : 'default',
         }}
       />
     );
@@ -265,6 +397,7 @@ function DartBoard({ zones }) {
           fontFamily="'Orbitron', monospace"
           textAnchor="middle"
           dominantBaseline="middle"
+          style={{ pointerEvents: 'none' }}
         >
           {num}
         </text>
@@ -273,7 +406,14 @@ function DartBoard({ zones }) {
   };
 
   return (
-    <svg viewBox="0 0 400 400" style={styles.dartBoard}>
+    <svg 
+      viewBox="0 0 400 400" 
+      style={{
+        ...styles.dartBoard,
+        cursor: touchMode ? 'crosshair' : 'default',
+      }}
+      onClick={handleClick}
+    >
       <circle cx={centerX} cy={centerY} r={195} fill="#0a0a15" stroke="#333" strokeWidth="2" />
       
       {DART_NUMBERS.map((_, index) => 
@@ -301,6 +441,7 @@ function DartBoard({ zones }) {
         strokeWidth="1"
         style={{ 
           filter: zones['bull-outer']?.owner ? `drop-shadow(0 0 6px ${zones['bull-outer'].owner.color})` : 'none',
+          cursor: touchMode ? 'pointer' : 'default',
         }}
       />
       
@@ -313,17 +454,22 @@ function DartBoard({ zones }) {
         strokeWidth="1"
         style={{ 
           filter: zones['bull-inner']?.owner ? `drop-shadow(0 0 6px ${zones['bull-inner'].owner.color})` : 'none',
+          cursor: touchMode ? 'pointer' : 'default',
         }}
       />
       
       {renderNumbers()}
+      
+      {touchMode}
     </svg>
   );
 }
 
 // Écran de jeu Zone
-function ZoneGameScreen({ players, onEndGame }) {
+function ZoneGameScreen({ players, gameOptions, onEndGame }) {
   const MAX_ROUNDS = 10;
+  const { touchMode, stealZones } = gameOptions;
+  
   const [zones, setZones] = useState({});
   const [scores, setScores] = useState(
     players.reduce((acc, player) => ({ ...acc, [player.id]: 0 }), {})
@@ -351,22 +497,8 @@ function ZoneGameScreen({ players, onEndGame }) {
     setHistory(history.slice(0, -1));
   };
 
-  const handleNumberClick = (number) => {
-    let zoneType;
-    if (number === 25) {
-      zoneType = multiplier === 'double' ? ZONE_TYPES.BULL_INNER : ZONE_TYPES.BULL_OUTER;
-    } else {
-      if (multiplier === 'triple') {
-        zoneType = ZONE_TYPES.TRIPLE;
-      } else if (multiplier === 'double') {
-        zoneType = ZONE_TYPES.DOUBLE;
-      } else if (multiplier === 'inner') {
-        zoneType = ZONE_TYPES.SINGLE_INNER;
-      } else {
-        zoneType = ZONE_TYPES.SINGLE_OUTER;
-      }
-    }
-
+  const processThrow = (number, zoneType) => {
+    
     setHistory(prev => [...prev, {
       zones: { ...zones },
       scores: { ...scores },
@@ -374,6 +506,39 @@ function ZoneGameScreen({ players, onEndGame }) {
       throwsLeft,
       playerRounds: { ...playerRounds },
     }]);
+
+    // Gestion du miss (0)
+    if (number === 0) {
+      const newThrowsLeft = throwsLeft - 1;
+      if (newThrowsLeft === 0) {
+        const newPlayerRounds = { ...playerRounds };
+        newPlayerRounds[currentPlayer.id] = playerRounds[currentPlayer.id] + 1;
+        
+        let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        let checkedPlayers = 0;
+        
+        while (newPlayerRounds[players[nextPlayerIndex].id] > MAX_ROUNDS && checkedPlayers < players.length) {
+          nextPlayerIndex = (nextPlayerIndex + 1) % players.length;
+          checkedPlayers++;
+        }
+        
+        const allPlayersFinished = players.every(p => newPlayerRounds[p.id] > MAX_ROUNDS);
+        
+        if (allPlayersFinished) {
+          setGameOver(true);
+        } else {
+          setCurrentPlayerIndex(nextPlayerIndex);
+          setThrowsLeft(3);
+        }
+        
+        setPlayerRounds(newPlayerRounds);
+      } else {
+        setThrowsLeft(newThrowsLeft);
+      }
+      
+      setMultiplier('outer');
+      return;
+    }
 
     const zoneKey = number === 25 
       ? (zoneType === ZONE_TYPES.BULL_INNER ? 'bull-inner' : 'bull-outer')
@@ -387,18 +552,28 @@ function ZoneGameScreen({ players, onEndGame }) {
     if (number === 25) {
       points = zoneType === ZONE_TYPES.BULL_INNER ? 50 : 25;
     } else {
-      const mult = multiplier === 'triple' ? 3 : multiplier === 'double' ? 2 : 1;
+      const mult = zoneType === ZONE_TYPES.TRIPLE ? 3 : zoneType === ZONE_TYPES.DOUBLE ? 2 : 1;
       points = number * mult;
     }
 
     if (!zone || !zone.owner) {
+      // Zone libre - on la capture
       newZones[zoneKey] = { owner: currentPlayer };
       newScores[currentPlayer.id] += points;
     } else if (zone.owner.id === currentPlayer.id) {
-      // Zone déjà possédée
+      // Zone déjà possédée - rien ne se passe
     } else {
-      newScores[zone.owner.id] -= points;
-      newZones[zoneKey] = { owner: null };
+      // Zone d'un adversaire
+      if (stealZones) {
+        // Mode vol de cibles : on prend les points directement
+        newScores[zone.owner.id] -= points;
+        newScores[currentPlayer.id] += points;
+        newZones[zoneKey] = { owner: currentPlayer };
+      } else {
+        // Mode normal : la zone devient neutre
+        newScores[zone.owner.id] -= points;
+        newZones[zoneKey] = { owner: null };
+      }
     }
 
     setZones(newZones);
@@ -432,6 +607,35 @@ function ZoneGameScreen({ players, onEndGame }) {
     }
     
     setMultiplier('outer');
+  };
+
+  const handleNumberClick = (number) => {
+    if (number === 0) {
+      // Miss - on passe au joueur suivant sans marquer de points
+      processThrow(0, null);
+      return;
+    }
+
+    let zoneType;
+    if (number === 25) {
+      zoneType = multiplier === 'double' ? ZONE_TYPES.BULL_INNER : ZONE_TYPES.BULL_OUTER;
+    } else {
+      if (multiplier === 'triple') {
+        zoneType = ZONE_TYPES.TRIPLE;
+      } else if (multiplier === 'double') {
+        zoneType = ZONE_TYPES.DOUBLE;
+      } else if (multiplier === 'inner') {
+        zoneType = ZONE_TYPES.SINGLE_INNER;
+      } else {
+        zoneType = ZONE_TYPES.SINGLE_OUTER;
+      }
+    }
+
+    processThrow(number, zoneType);
+  };
+
+  const handleZoneClick = (number, zoneType) => {
+    processThrow(number, zoneType);
   };
 
   const rankedPlayers = [...players].sort((a, b) => scores[b.id] - scores[a.id]);
@@ -478,7 +682,7 @@ function ZoneGameScreen({ players, onEndGame }) {
     );
   }
 
-  const row1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const row1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const row2 = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25];
 
   return (
@@ -541,93 +745,116 @@ function ZoneGameScreen({ players, onEndGame }) {
       {/* Cible */}
       <div style={styles.mainArea}>
         <div style={styles.dartBoardContainer}>
-          <DartBoard zones={zones} />
+          <DartBoard 
+            zones={zones} 
+            touchMode={touchMode}
+            currentPlayer={currentPlayer}
+            onZoneClick={handleZoneClick}
+          />
         </div>
       </div>
 
       {/* Panneau de contrôle */}
-      <div style={styles.controlPanel}>
-        <div style={styles.multiplierRow}>
-          <button
-            onClick={() => setMultiplier('outer')}
-            style={{
-              ...styles.multiplierButton,
-              background: multiplier === 'outer' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
-              color: multiplier === 'outer' ? '#000' : '#fff',
-            }}
-          >
-            Ext
-          </button>
-          <button
-            onClick={() => setMultiplier('inner')}
-            style={{
-              ...styles.multiplierButton,
-              background: multiplier === 'inner' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
-              color: multiplier === 'inner' ? '#000' : '#fff',
-            }}
-          >
-            Int
-          </button>
-          <button
-            onClick={() => setMultiplier('double')}
-            style={{
-              ...styles.multiplierButton,
-              background: multiplier === 'double' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
-              color: multiplier === 'double' ? '#000' : '#fff',
-            }}
-          >
-            Double
-          </button>
-          <button
-            onClick={() => setMultiplier('triple')}
-            style={{
-              ...styles.multiplierButton,
-              background: multiplier === 'triple' ? currentPlayer.color : 'rgba(255,255,255,0.1)',
-              color: multiplier === 'triple' ? '#000' : '#fff',
-            }}
-          >
-            Triple
-          </button>
-        </div>
-
-        <div style={styles.numberRow}>
-          {row1.map(num => (
+      {!touchMode && (
+        <div style={styles.controlPanel}>
+          <div style={styles.multiplierRow}>
             <button
-              key={num}
-              onClick={() => handleNumberClick(num)}
-              style={styles.numberButton}
-            >
-              {num}
-            </button>
-          ))}
-        </div>
-
-        <div style={styles.numberRow}>
-          {row2.map(num => (
-            <button
-              key={num}
-              onClick={() => handleNumberClick(num)}
+              onClick={() => setMultiplier('outer')}
               style={{
-                ...styles.numberButton,
-                ...(num === 25 ? styles.bullButton : {}),
+                ...styles.multiplierButton,
+                background: multiplier === 'outer' ? currentPlayer.color : 'rgba(255,140,0,0.2)',
+                color: multiplier === 'outer' ? '#000' : '#fff',
               }}
             >
-              {num}
+              Ext
             </button>
-          ))}
-        </div>
+            <button
+              onClick={() => setMultiplier('inner')}
+              style={{
+                ...styles.multiplierButton,
+                background: multiplier === 'inner' ? currentPlayer.color : 'rgba(255,140,0,0.2)',
+                color: multiplier === 'inner' ? '#000' : '#fff',
+              }}
+            >
+              Int
+            </button>
+            <button
+              onClick={() => setMultiplier('double')}
+              style={{
+                ...styles.multiplierButton,
+                background: multiplier === 'double' ? currentPlayer.color : 'rgba(255,140,0,0.2)',
+                color: multiplier === 'double' ? '#000' : '#fff',
+              }}
+            >
+              Double
+            </button>
+            <button
+              onClick={() => setMultiplier('triple')}
+              style={{
+                ...styles.multiplierButton,
+                background: multiplier === 'triple' ? currentPlayer.color : 'rgba(255,140,0,0.2)',
+                color: multiplier === 'triple' ? '#000' : '#fff',
+              }}
+            >
+              Triple
+            </button>
+          </div>
 
-        <button 
-          onClick={handleUndo} 
-          style={{
-            ...styles.undoButton,
-            opacity: history.length > 0 ? 1 : 0.3,
-          }}
-          disabled={history.length === 0}
-        >
-          ↩ Annuler
-        </button>
-      </div>
+          <div style={styles.numberRow}>
+            {row1.map(num => (
+              <button
+                key={num}
+                onClick={() => handleNumberClick(num)}
+                style={{
+                  ...styles.numberButton,
+                  ...(num === 0 ? styles.missButton : {}),
+                }}
+              >
+                {num === 0 ? '✕' : num}
+              </button>
+            ))}
+          </div>
+
+          <div style={styles.numberRow}>
+            {row2.map(num => (
+              <button
+                key={num}
+                onClick={() => handleNumberClick(num)}
+                style={{
+                  ...styles.numberButton,
+                  ...(num === 25 ? styles.bullButton : {}),
+                }}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bouton Miss pour le mode tactile */}
+      {touchMode && (
+        <div style={styles.touchModeControls}>
+          <button 
+            onClick={() => handleNumberClick(0)}
+            style={styles.missButtonTouchMode}
+          >
+            ✕ Miss
+          </button>
+        </div>
+      )}
+
+      <button 
+        onClick={handleUndo} 
+        style={{
+          ...styles.undoButton,
+          opacity: history.length > 0 ? 1 : 0.3,
+          marginTop: touchMode ? '5px' : '2px',
+        }}
+        disabled={history.length === 0}
+      >
+        ↩ Annuler
+      </button>
     </div>
   );
 }
@@ -637,16 +864,24 @@ function DartsApp() {
   const [screen, setScreen] = useState('home');
   const [selectedGame, setSelectedGame] = useState(null);
   const [players, setPlayers] = useState([]);
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
+  const [gameOptions, setGameOptions] = useState(null);
 
   const handleSelectGame = (gameId) => {
     setSelectedGame(gameId);
     setScreen('players');
   };
 
-  const handleStartGame = (selectedPlayers) => {
+  const handlePlayersSelected = (selected) => {
+    setSelectedPlayers(selected);
+    setScreen('options');
+  };
+
+  const handleStartGame = (options) => {
     const playersWithColors = assignRandomColors(selectedPlayers);
     const shuffledPlayers = [...playersWithColors].sort(() => Math.random() - 0.5);
     setPlayers(shuffledPlayers);
+    setGameOptions(options);
     setScreen('game');
   };
 
@@ -654,6 +889,8 @@ function DartsApp() {
     setScreen('home');
     setSelectedGame(null);
     setPlayers([]);
+    setSelectedPlayers([]);
+    setGameOptions(null);
   };
 
   return (
@@ -663,13 +900,20 @@ function DartsApp() {
       )}
       {screen === 'players' && (
         <PlayerSelectScreen
-          onStartGame={handleStartGame}
+          onStartGame={handlePlayersSelected}
           onBack={() => setScreen('home')}
+        />
+      )}
+      {screen === 'options' && (
+        <GameOptionsScreen
+          onStartGame={handleStartGame}
+          onBack={() => setScreen('players')}
         />
       )}
       {screen === 'game' && selectedGame === 'zone' && (
         <ZoneGameScreen
           players={players}
+          gameOptions={gameOptions}
           onEndGame={handleEndGame}
         />
       )}
@@ -850,6 +1094,64 @@ const styles = {
     borderRadius: '25px',
     color: '#fff',
     transition: 'all 0.3s ease',
+    cursor: 'pointer',
+  },
+
+  // Options Screen
+  optionsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+    width: '100%',
+    maxWidth: '450px',
+    marginTop: '20px',
+  },
+  optionCard: {
+    background: 'rgba(255, 140, 0, 0.1)',
+    border: '2px solid rgba(255, 140, 0, 0.3)',
+    borderRadius: '15px',
+    padding: '20px',
+  },
+  optionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '20px',
+  },
+  optionTextContainer: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: '18px',
+    margin: '0 0 8px 0',
+    fontWeight: 'bold',
+  },
+  optionDescription: {
+    fontSize: '13px',
+    color: '#aaa',
+    margin: '0',
+    lineHeight: '1.5',
+  },
+  toggleButton: {
+    width: '56px',
+    height: '30px',
+    borderRadius: '15px',
+    cursor: 'pointer',
+    position: 'relative',
+    transition: 'all 0.3s ease',
+    flexShrink: 0,
+    padding: '0',
+  },
+  toggleSlider: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '12px',
+    background: '#fff',
+    position: 'absolute',
+    top: '3px',
+    left: '0',
+    transition: 'transform 0.3s ease',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
   },
 
   // Game Screen
@@ -867,6 +1169,7 @@ const styles = {
     alignItems: 'center',
     padding: '2px 0',
     flexShrink: 0,
+    marginBottom: '10px',  // ← AJOUTE CETTE LIGNE
   },
   endGameButton: {
     background: 'rgba(255, 140, 0, 0.2)',
@@ -877,32 +1180,7 @@ const styles = {
     borderRadius: '8px',
     cursor: 'pointer',
   },
-  currentPlayerDisplay: {
-    textAlign: 'center',
-    flex: 1,
-  },
-  currentPlayerName: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-  },
-  throwsIndicator: {
-    display: 'flex',
-    gap: '5px',
-    justifyContent: 'center',
-    marginTop: '4px',
-  },
-  throwDot: {
-    width: '10px',
-    height: '10px',
-    borderRadius: '50%',
-    transition: 'all 0.3s ease',
-  },
-  roundIndicator: {
-    fontSize: '14px',
-    color: '#FF8C00',
-    fontWeight: 'bold',
-  },
-  
+
   // Scores Panel
   scoresPanel: {
     display: 'flex',
@@ -910,6 +1188,7 @@ const styles = {
     padding: '2px 0',
     justifyContent: 'center',
     flexShrink: 0,
+    marginBottom: '8px',  // ← CHANGE cette valeur pour ajuster l'écart
   },
   scoreCard: {
     background: 'rgba(255, 140, 0, 0.1)',
@@ -1015,7 +1294,6 @@ const styles = {
     padding: '12px 25px',
     borderRadius: '10px',
     cursor: 'pointer',
-    marginTop: '2px',
     alignSelf: 'center',
   },
 
@@ -1099,6 +1377,32 @@ const styles = {
     borderRadius: '25px',
     color: '#fff',
     cursor: 'pointer',
+  },
+
+  // Ajouter le style du bouton Miss
+  missButton: {
+    background: '#888',
+    color: '#fff',
+  },
+
+  // Ajouter les styles du mode tactile
+  touchModeControls: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center',
+    padding: '8px 5px',
+    flexShrink: 0,
+  },
+  missButtonTouchMode: {
+    background: '#888',
+    border: 'none',
+    color: '#fff',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    padding: '12px 25px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
   },
 };
 
